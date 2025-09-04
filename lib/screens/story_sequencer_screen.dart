@@ -1,206 +1,319 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
-
-// TODO: Story Sequencer Developer - Replace this placeholder with your implementation
-// 
-// Requirements for Story Sequencer:
-// - Visual story cards that users can arrange in sequence
-// - Drag and drop functionality for reordering story elements
-// - Image-based stories with text support
-// - Progressive difficulty levels
-// - Visual feedback for correct/incorrect sequences
-// - Save/load story progress
-// - Audio narration support (integrate with TTSService)
-// 
-// Available resources:
-// - Use AACProvider for state management patterns
-// - Use AppTheme for consistent styling
-// - TTSService is available at '../services/tts_service.dart'
-// - CommunicationMessage model for saving progress
-// 
-// Suggested folder structure:
-// - /widgets/story_card.dart
-// - /widgets/sequence_area.dart
-// - /models/story.dart
-// - /providers/story_provider.dart
+import '../providers/story_provider.dart';
+import '../widgets/story_card_widget.dart';
 
 class StorySequencerScreen extends StatelessWidget {
   const StorySequencerScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => StoryProvider(),
+      child: const _StorySequencerContent(),
+    );
+  }
+}
+
+class _StorySequencerContent extends StatelessWidget {
+  const _StorySequencerContent();
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: const Text(
-          'Story Sequencer',
-          style: TextStyle(fontWeight: FontWeight.w600),
+        title: const Text('Story Sequencer'),
+        actions: [
+          Consumer<StoryProvider>(
+            builder: (context, provider, _) => PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'narrations') {
+                  _showNarrationsDialog(context, provider);
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'narrations',
+                  child: Row(
+                    children: [
+                      Icon(Icons.history),
+                      SizedBox(width: 8),
+                      Text('Saved Narrations'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      body: Consumer<StoryProvider>(
+        builder: (context, provider, _) => SingleChildScrollView(
+          child: Column(
+            children: [
+              _StoryHeader(provider: provider),
+              SizedBox(
+                height: 200,
+                child: _StorySequenceArea(provider: provider),
+              ),
+              _ControlButtons(provider: provider),
+              if (provider.isCorrect) _NarrationSection(provider: provider),
+            ],
+          ),
         ),
       ),
-      body: const _PlaceholderContent(
-        title: 'Story Sequencer',
-        description: 'Help users understand narrative sequences through visual story cards',
-        features: [
-          '📖 Visual story cards with drag & drop',
-          '🎯 Progressive difficulty levels', 
-          '🔊 Audio narration support',
-          '💾 Save story progress',
-          '✅ Visual feedback system',
+    );
+  }
+
+  void _showNarrationsDialog(BuildContext context, StoryProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Saved Narrations'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: provider.savedNarrations.isEmpty
+              ? const Text('No narrations saved yet.')
+              : ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: provider.savedNarrations.length,
+                  itemBuilder: (context, index) => ListTile(
+                    title: Text(provider.savedNarrations[index]),
+                    dense: true,
+                  ),
+                ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
         ],
-        developerNote: 'Story Sequencer Developer: Implement interactive story sequencing here',
       ),
     );
   }
 }
 
-class _PlaceholderContent extends StatelessWidget {
-  final String title;
-  final String description;
-  final List<String> features;
-  final String developerNote;
+class _StoryHeader extends StatelessWidget {
+  final StoryProvider provider;
 
-  const _PlaceholderContent({
-    required this.title,
-    required this.description,
-    required this.features,
-    required this.developerNote,
-  });
+  const _StoryHeader({required this.provider});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [AppTheme.cardShadow],
+      ),
+      child: Row(
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [AppTheme.cardShadow],
-            ),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        gradient: AppTheme.gradient1,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Icon(
-                        Icons.auto_stories,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            style: theme.textTheme.headlineMedium,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Coming Soon',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: AppTheme.primaryColor,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
                 Text(
-                  description,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    height: 1.6,
+                  provider.currentStory.title,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 20),
                 Text(
-                  'Planned Features:',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                  'Difficulty: ${provider.currentStory.difficulty}',
+                  style: TextStyle(
+                    color: AppTheme.textSecondaryColor,
+                    fontSize: 14,
                   ),
                 ),
-                const SizedBox(height: 12),
-                ...features.map((feature) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        feature.split(' ').first,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          feature.substring(feature.indexOf(' ') + 1),
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                      ),
-                    ],
-                  ),
-                )),
               ],
             ),
           ),
-          const SizedBox(height: 24),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: AppTheme.primaryColor.withOpacity(0.2),
+          Row(
+            children: [
+              IconButton(
+                onPressed: provider.previousStory,
+                icon: const Icon(Icons.arrow_back_ios),
+              ),
+              IconButton(
+                onPressed: provider.nextStory,
+                icon: const Icon(Icons.arrow_forward_ios),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StorySequenceArea extends StatelessWidget {
+  final StoryProvider provider;
+
+  const _StorySequenceArea({required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: ReorderableListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: provider.userSequence.length,
+        onReorder: provider.reorderCards,
+        itemBuilder: (context, index) {
+          final card = provider.userSequence[index];
+          final isCorrect = provider.isCorrect && card.correctOrder == index;
+          
+          return SizedBox(
+            key: ValueKey(card.id),
+            width: 120,
+            child: StoryCardWidget(
+              card: card,
+              isCorrectPosition: isCorrect,
+              showFeedback: provider.isCorrect,
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ControlButtons extends StatelessWidget {
+  final StoryProvider provider;
+
+  const _ControlButtons({required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Expanded(
+            child: ElevatedButton(
+              onPressed: provider.checkOrder,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('Check Order'),
+            ),
+          ),
+          if (provider.showSuccess) ...[
+            const SizedBox(width: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.check, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text('Correct!', style: TextStyle(color: Colors.white)),
+                ],
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.code,
-                      color: AppTheme.primaryColor,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Developer Note',
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        color: AppTheme.primaryColor,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  developerNote,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textSecondaryColor,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _NarrationSection extends StatefulWidget {
+  final StoryProvider provider;
+
+  const _NarrationSection({required this.provider});
+
+  @override
+  State<_NarrationSection> createState() => _NarrationSectionState();
+}
+
+class _NarrationSectionState extends State<_NarrationSection> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.green.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.green.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Great! Now tell the story in your own words:',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
             ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _controller,
+            onChanged: widget.provider.updateNarration,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: 'Describe what happens in this story...',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              filled: true,
+              fillColor: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              ElevatedButton.icon(
+                onPressed: widget.provider.speakNarration,
+                icon: const Icon(Icons.volume_up),
+                label: const Text('Speak'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 12),
+              ElevatedButton.icon(
+                onPressed: () {
+                  widget.provider.saveNarration();
+                  _controller.clear();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Narration saved!')),
+                  );
+                },
+                icon: const Icon(Icons.save),
+                label: const Text('Save'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
           ),
         ],
       ),
