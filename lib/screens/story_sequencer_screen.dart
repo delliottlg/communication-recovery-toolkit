@@ -50,15 +50,18 @@ class _StorySequencerContent extends StatelessWidget {
         ],
       ),
       body: Consumer<StoryProvider>(
-        builder: (context, provider, _) => Column(
-          children: [
-            _StoryHeader(provider: provider),
-            Expanded(
-              child: _StorySequenceArea(provider: provider),
-            ),
-            _ControlButtons(provider: provider),
-            if (provider.isCorrect) _NarrationSection(provider: provider),
-          ],
+        builder: (context, provider, _) => SingleChildScrollView(
+          child: Column(
+            children: [
+              _StoryHeader(provider: provider),
+              SizedBox(
+                height: 200,
+                child: _StorySequenceArea(provider: provider),
+              ),
+              _ControlButtons(provider: provider),
+              if (provider.isCorrect) _NarrationSection(provider: provider),
+            ],
+          ),
         ),
       ),
     );
