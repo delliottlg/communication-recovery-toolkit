@@ -15,7 +15,7 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
 
-  static const List<Widget> _screens = [
+  static final List<Widget> _screens = [
     AACBoardScreen(),
     StorySequencerScreen(),
     ProgressTrackerScreen(),

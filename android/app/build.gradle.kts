@@ -6,6 +6,8 @@ plugins {
 }
 
 android {
+    // Align NDK version with plugin requirements
+    ndkVersion = "27.0.12077973"
     namespace = "com.example.communication_recovery_toolkit"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
