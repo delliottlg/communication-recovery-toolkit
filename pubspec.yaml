@@ -26,8 +26,14 @@ dependencies:
   lottie: ^2.7.0
   animations: ^2.0.8
   
+  # Charts & Calendar
+  fl_chart: ^0.68.0
+  table_calendar: ^3.1.2
+  
   # Utilities
   shared_preferences: ^2.2.2
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
 
 dev_dependencies:
   flutter_test:
